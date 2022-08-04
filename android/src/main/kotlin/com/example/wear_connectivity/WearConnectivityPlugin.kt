@@ -99,7 +99,8 @@ class WearConnectivityPlugin : FlutterPlugin, MethodCallHandler,
 
         val pairedDevices: Set<BluetoothDevice> = mBtAdapter.getBondedDevices()
 
-        if (pairedDevices.size() > 0) {
+        val devices = pairedDevices.size
+        if (devices > 0) {
            result.success(true)
         }
     }
