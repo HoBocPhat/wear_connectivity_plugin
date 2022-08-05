@@ -14,7 +14,7 @@ import java.io.ObjectInputStream
 import java.io.ObjectOutputStream
 
 
-/** WatchConnectivityPlugin */
+/** WearConnectivityPlugin */
 class WearConnectivityPlugin : FlutterPlugin, MethodCallHandler,
         MessageClient.OnMessageReceivedListener, DataClient.OnDataChangedListener {
     private val channelName = "wear_connectivity"
@@ -94,7 +94,7 @@ class WearConnectivityPlugin : FlutterPlugin, MethodCallHandler,
     private fun isReachable(result: Result) {
         nodeClient.connectedNodes
                 .addOnSuccessListener { result.success(it.isNotEmpty()) }
-                .addOnFailureListener { result.error(it.message ?: "", it.localizedMessage, it) }
+                .addOnFailureListener { result.success(false) }
     }
 
     private fun applicationContext(result: Result) {
