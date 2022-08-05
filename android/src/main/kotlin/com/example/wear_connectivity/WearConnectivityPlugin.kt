@@ -12,12 +12,11 @@ import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.ObjectInputStream
 import java.io.ObjectOutputStream
-import android.bluetooth.BluetoothAdapter
-import android.bluetooth.BluetoothDevice
 
 
+/** WatchConnectivityPlugin */
 class WearConnectivityPlugin : FlutterPlugin, MethodCallHandler,
-    MessageClient.OnMessageReceivedListener, DataClient.OnDataChangedListener {
+        MessageClient.OnMessageReceivedListener, DataClient.OnDataChangedListener {
     private val channelName = "wear_connectivity"
 
     /// The MethodChannel that will the communication between Flutter and native Android
@@ -62,7 +61,6 @@ class WearConnectivityPlugin : FlutterPlugin, MethodCallHandler,
             "isReachable" -> isReachable(result)
             "applicationContext" -> applicationContext(result)
             "receivedApplicationContexts" -> receivedApplicationContexts(result)
-            "isAppWatchInstalled" -> isAppWatchInstalled(result)
 
             // Methods
             "sendMessage" -> sendMessage(call, result)
@@ -86,58 +84,44 @@ class WearConnectivityPlugin : FlutterPlugin, MethodCallHandler,
         return ois.readObject()
     }
 
-    private fun isAppWatchInstalled(result: Result) {
+    private fun isPaired(result: Result) {
         val apps = packageManager.getInstalledApplications(0)
         val wearableAppInstalled =
                 apps.any { it.packageName == "com.google.android.wearable.app" || it.packageName == "com.samsung.android.app.watchmanager" }
         result.success(wearableAppInstalled)
     }
 
-    private fun isPaired(result: Result) {
-
-        val mBtAdapter: BluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
-
-        val pairedDevices: Set<BluetoothDevice> = mBtAdapter.getBondedDevices()
-
-        val devices = pairedDevices.size
-        if (devices > 0) {
-           result.success(true)
-        }
-    }
-
     private fun isReachable(result: Result) {
         nodeClient.connectedNodes
-            .addOnSuccessListener { result.success(it.isNotEmpty()) }
-            .addOnFailureListener {
-                result.error(it.message ?: "", it.localizedMessage, it)
-            }
+                .addOnSuccessListener { result.success(it.isNotEmpty()) }
+                .addOnFailureListener { result.error(it.message ?: "", it.localizedMessage, it) }
     }
 
     private fun applicationContext(result: Result) {
         dataClient.dataItems
-            .addOnSuccessListener { items ->
-                val localNodeItem = items.firstOrNull {
-                    // Only elements from the local node (there should only be one)
-                    it.uri.host == localNode.id && it.uri.path == "/$channelName"
-                }
-                if (localNodeItem != null) {
-                    val itemContent = objectFromBytes(localNodeItem.data)
-                    result.success(itemContent)
-                } else {
-                    result.success(emptyMap<String, Any>())
-                }
-            }.addOnFailureListener { result.error(it.message ?: "", it.localizedMessage, it) }
+                .addOnSuccessListener { items ->
+                    val localNodeItem = items.firstOrNull {
+                        // Only elements from the local node (there should only be one)
+                        it.uri.host == localNode.id && it.uri.path == "/$channelName"
+                    }
+                    if (localNodeItem != null) {
+                        val itemContent = objectFromBytes(localNodeItem.data)
+                        result.success(itemContent)
+                    } else {
+                        result.success(emptyMap<String, Any>())
+                    }
+                }.addOnFailureListener { result.error(it.message ?: "", it.localizedMessage, it) }
     }
 
     private fun receivedApplicationContexts(result: Result) {
         dataClient.dataItems
-            .addOnSuccessListener { items ->
-                val itemContents = items.filter {
-                    // Elements that are not from the local node
-                    it.uri.host != localNode.id && it.uri.path == "/$channelName"
-                }.map { objectFromBytes(it.data) }
-                result.success(itemContents)
-            }.addOnFailureListener { result.error(it.message ?: "", it.localizedMessage, it) }
+                .addOnSuccessListener { items ->
+                    val itemContents = items.filter {
+                        // Elements that are not from the local node
+                        it.uri.host != localNode.id && it.uri.path == "/$channelName"
+                    }.map { objectFromBytes(it.data) }
+                    result.success(itemContents)
+                }.addOnFailureListener { result.error(it.message ?: "", it.localizedMessage, it) }
     }
 
     private fun sendMessage(call: MethodCall, result: Result) {
@@ -153,8 +137,8 @@ class WearConnectivityPlugin : FlutterPlugin, MethodCallHandler,
         val dataItem = PutDataRequest.create("/$channelName")
         dataItem.data = eventData
         dataClient.putDataItem(dataItem)
-            .addOnSuccessListener { result.success(null) }
-            .addOnFailureListener { result.error(it.message ?: "", it.localizedMessage, it) }
+                .addOnSuccessListener { result.success(null) }
+                .addOnFailureListener { result.error(it.message ?: "", it.localizedMessage, it) }
 
     }
 
@@ -165,14 +149,14 @@ class WearConnectivityPlugin : FlutterPlugin, MethodCallHandler,
 
     override fun onDataChanged(dataItems: DataEventBuffer) {
         dataItems
-            .filter {
-                it.type == TYPE_CHANGED
-                        && it.dataItem.uri.host != localNode.id
-                        && it.dataItem.uri.path == "/$channelName"
-            }
-            .forEach { item ->
-                val eventContent = objectFromBytes(item.dataItem.data)
-                channel.invokeMethod("didReceiveApplicationContext", eventContent)
-            }
+                .filter {
+                    it.type == TYPE_CHANGED
+                            && it.dataItem.uri.host != localNode.id
+                            && it.dataItem.uri.path == "/$channelName"
+                }
+                .forEach { item ->
+                    val eventContent = objectFromBytes(item.dataItem.data)
+                    channel.invokeMethod("didReceiveApplicationContext", eventContent)
+                }
     }
 }
