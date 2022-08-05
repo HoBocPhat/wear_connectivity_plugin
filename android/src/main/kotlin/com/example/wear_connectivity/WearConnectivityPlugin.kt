@@ -108,7 +108,9 @@ class WearConnectivityPlugin : FlutterPlugin, MethodCallHandler,
     private fun isReachable(result: Result) {
         nodeClient.connectedNodes
             .addOnSuccessListener { result.success(it.isNotEmpty()) }
-            .addOnFailureListener { result.error(it.message ?: "", it.localizedMessage, it) }
+            .addOnFailureListener {
+                result.error(false)
+            }
     }
 
     private fun applicationContext(result: Result) {
