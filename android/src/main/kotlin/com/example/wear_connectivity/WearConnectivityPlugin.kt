@@ -109,7 +109,7 @@ class WearConnectivityPlugin : FlutterPlugin, MethodCallHandler,
         nodeClient.connectedNodes
             .addOnSuccessListener { result.success(it.isNotEmpty()) }
             .addOnFailureListener {
-                result.success(false)
+                result.error(it.message ?: "", it.localizedMessage, it)
             }
     }
 
