@@ -1,6 +1,8 @@
 package com.example.wear_connectivity
 
 import android.content.pm.PackageManager
+import android.bluetooth.BluetoothAdapter
+import android.bluetooth.BluetoothDevice
 import com.google.android.gms.wearable.*
 import com.google.android.gms.wearable.DataEvent.TYPE_CHANGED
 import io.flutter.embedding.engine.plugins.FlutterPlugin
@@ -61,7 +63,7 @@ class WearConnectivityPlugin : FlutterPlugin, MethodCallHandler,
             "isReachable" -> isReachable(result)
             "applicationContext" -> applicationContext(result)
             "receivedApplicationContexts" -> receivedApplicationContexts(result)
-
+            "isAppWatchInstalled" -> isAppWatchInstalled(result)
             // Methods
             "sendMessage" -> sendMessage(call, result)
             "updateApplicationContext" -> updateApplicationContext(call, result)
@@ -84,7 +86,7 @@ class WearConnectivityPlugin : FlutterPlugin, MethodCallHandler,
         return ois.readObject()
     }
 
-    private fun isPaired(result: Result) {
+    private fun isAppWatchInstalled(result: Result) {
         val apps = packageManager.getInstalledApplications(0)
         val wearableAppInstalled =
                 apps.any { it.packageName == "com.google.android.wearable.app" || it.packageName == "com.samsung.android.app.watchmanager" }
@@ -94,7 +96,17 @@ class WearConnectivityPlugin : FlutterPlugin, MethodCallHandler,
     private fun isReachable(result: Result) {
         nodeClient.connectedNodes
                 .addOnSuccessListener { result.success(it.isNotEmpty()) }
-                .addOnFailureListener { result.success(false) }
+                .addOnFailureListener { result.error(it.message ?: "", it.localizedMessage, it) }
+    }
+
+    private fun isPaired(result: Result) {
+        val mBtAdapter: BluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
+
+        val pairedDevices: Set<BluetoothDevice> = mBtAdapter.getBondedDevices()
+
+        if (pairedDevices.size > 0) {
+            result.success(true)
+        }
     }
 
     private fun applicationContext(result: Result) {
