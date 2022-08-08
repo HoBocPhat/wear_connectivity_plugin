@@ -3,6 +3,7 @@ package com.example.wear_connectivity
 import android.content.pm.PackageManager
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
+import android.os.Build.VERSION
 import com.google.android.gms.wearable.*
 import com.google.android.gms.wearable.DataEvent.TYPE_CHANGED
 import io.flutter.embedding.engine.plugins.FlutterPlugin
@@ -58,7 +59,7 @@ class WearConnectivityPlugin : FlutterPlugin, MethodCallHandler,
     override fun onMethodCall(call: MethodCall, result: Result) {
         when (call.method) {
             // Getters
-            "isSupported" -> result.success(true)
+            "isSupported" -> isSupported(result)
             "isPaired" -> isPaired(result)
             "isReachable" -> isReachable(result)
             "applicationContext" -> applicationContext(result)
@@ -91,6 +92,13 @@ class WearConnectivityPlugin : FlutterPlugin, MethodCallHandler,
         val wearableAppInstalled =
                 apps.any { it.packageName == "com.google.android.wearable.app" || it.packageName == "com.samsung.android.app.watchmanager" }
         result.success(wearableAppInstalled)
+    }
+
+    private fun isSupported(result: Result) {
+        if(android.os.Build.VERSION.SDK_INT >= 23){
+            result.success(true);
+        }
+
     }
 
     private fun isReachable(result: Result) {

@@ -81,12 +81,12 @@ class WearConnectivity {
   }
 
   /// Send a message to all connected watches
-  Future<T?> sendMessage<T>(List<dynamic> message) {
-    return channel.invokeMethod('sendMessage', message);
+  Future<T?> sendMessage<T>(List<dynamic> args) {
+    return channel.invokeMethod('sendMessage', args);
   }
 
   /// Update the application context
-  Future<T?> updateApplicationContext<T>(List<dynamic> context) {
-    return channel.invokeMethod('updateApplicationContext', context);
+  Future<T?> updateApplicationContext<T>(List<dynamic> args) {
+    return channel.invokeMethod('updateApplicationContext', args);
   }
 }
