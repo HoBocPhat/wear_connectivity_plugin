@@ -51,4 +51,7 @@ class WearConnectivity {
     return channel.invokeMethod('sendMessage', args);
   }
 
+  Future<void> updateApplicationContext(Map<String, dynamic> context) {
+    return channel.invokeMethod('updateApplicationContext', context);
+  }
 }

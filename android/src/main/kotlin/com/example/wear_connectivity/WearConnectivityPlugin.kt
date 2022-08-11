@@ -19,7 +19,7 @@ import java.io.ObjectOutputStream
 
 /** WearConnectivityPlugin */
 class WearConnectivityPlugin : FlutterPlugin, MethodCallHandler,
-        MessageClient.OnMessageReceivedListener {
+        MessageClient.OnMessageReceivedListener, DataClient.OnDataChangedListener{
     private val channelName = "wear_connectivity"
 
     private lateinit var channel: MethodChannel
@@ -27,6 +27,7 @@ class WearConnectivityPlugin : FlutterPlugin, MethodCallHandler,
     private lateinit var nodeClient: NodeClient
     private lateinit var messageClient: MessageClient
     private lateinit var localNode: Node
+    private lateinit var dataClient: DataClient
 
     override fun onAttachedToEngine(flutterPluginBinding: FlutterPlugin.FlutterPluginBinding) {
         channel = MethodChannel(flutterPluginBinding.binaryMessenger, channelName)
@@ -37,8 +38,10 @@ class WearConnectivityPlugin : FlutterPlugin, MethodCallHandler,
         packageManager = context.packageManager
         nodeClient = Wearable.getNodeClient(context)
         messageClient = Wearable.getMessageClient(context)
+        dataClient = Wearable.getDataClient(context)
 
         messageClient.addListener(this)
+        dataClient.addListener(this)
 
         nodeClient.localNode.addOnSuccessListener { localNode = it }
     }
@@ -46,6 +49,7 @@ class WearConnectivityPlugin : FlutterPlugin, MethodCallHandler,
     override fun onDetachedFromEngine(binding: FlutterPlugin.FlutterPluginBinding) {
         channel.setMethodCallHandler(null)
         messageClient.removeListener(this)
+        dataClient.removeListener(this)
     }
 
     override fun onMethodCall(call: MethodCall, result: Result) {
@@ -57,6 +61,7 @@ class WearConnectivityPlugin : FlutterPlugin, MethodCallHandler,
             "isAppWatchInstalled" -> isAppWatchInstalled(result)
             // Methods
             "sendMessage" -> sendMessage(call, result)
+            "updateApplicationContext" -> updateApplicationContext(call, result)
 
             // Not implemented
             else -> result.notImplemented()
@@ -105,7 +110,6 @@ class WearConnectivityPlugin : FlutterPlugin, MethodCallHandler,
         }
     }
 
-
     private fun sendMessage(call: MethodCall, result: Result) {
         val messageData = objectToBytes(call.arguments)
         nodeClient.connectedNodes.addOnSuccessListener { nodes ->
@@ -114,10 +118,18 @@ class WearConnectivityPlugin : FlutterPlugin, MethodCallHandler,
         }.addOnFailureListener { result.error(it.message ?: "", it.localizedMessage, it) }
     }
 
-
     override fun onMessageReceived(message: MessageEvent) {
         val messageContent = objectFromBytes(message.data)
         channel.invokeMethod("didReceiveMessage", messageContent)
     }
 
+    private fun updateApplicationContext(call: MethodCall, result: Result) {
+        val eventData = objectToBytes(call.arguments)
+        val dataItem = PutDataRequest.create("/$channelName")
+        dataItem.data = eventData
+        dataClient.putDataItem(dataItem)
+                .addOnSuccessListener { result.success(null) }
+                .addOnFailureListener { result.error(it.message ?: "", it.localizedMessage, it) }
+
+    }
 }
