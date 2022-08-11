@@ -22,16 +22,10 @@ class WearConnectivityPlugin : FlutterPlugin, MethodCallHandler,
         MessageClient.OnMessageReceivedListener, DataClient.OnDataChangedListener {
     private val channelName = "wear_connectivity"
 
-    /// The MethodChannel that will the communication between Flutter and native Android
-    ///
-    /// This local reference serves to register the plugin with the Flutter Engine and unregister it
-    /// when the Flutter Engine is detached from the Activity
     private lateinit var channel: MethodChannel
     private lateinit var packageManager: PackageManager
     private lateinit var nodeClient: NodeClient
     private lateinit var messageClient: MessageClient
-    private lateinit var dataClient: DataClient
-    private lateinit var localNode: Node
 
     override fun onAttachedToEngine(flutterPluginBinding: FlutterPlugin.FlutterPluginBinding) {
         channel = MethodChannel(flutterPluginBinding.binaryMessenger, channelName)
@@ -62,12 +56,9 @@ class WearConnectivityPlugin : FlutterPlugin, MethodCallHandler,
             "isSupported" -> isSupported(result)
             "isPaired" -> isPaired(result)
             "isReachable" -> isReachable(result)
-            "applicationContext" -> applicationContext(result)
-            "receivedApplicationContexts" -> receivedApplicationContexts(result)
             "isAppWatchInstalled" -> isAppWatchInstalled(result)
             // Methods
             "sendMessage" -> sendMessage(call, result)
-            "updateApplicationContext" -> updateApplicationContext(call, result)
 
             // Not implemented
             else -> result.notImplemented()
@@ -98,7 +89,6 @@ class WearConnectivityPlugin : FlutterPlugin, MethodCallHandler,
         if(android.os.Build.VERSION.SDK_INT >= 23){
             result.success(true);
         }
-
     }
 
     private fun isReachable(result: Result) {
@@ -117,32 +107,6 @@ class WearConnectivityPlugin : FlutterPlugin, MethodCallHandler,
         }
     }
 
-    private fun applicationContext(result: Result) {
-        dataClient.dataItems
-                .addOnSuccessListener { items ->
-                    val localNodeItem = items.firstOrNull {
-                        // Only elements from the local node (there should only be one)
-                        it.uri.host == localNode.id && it.uri.path == "/$channelName"
-                    }
-                    if (localNodeItem != null) {
-                        val itemContent = objectFromBytes(localNodeItem.data)
-                        result.success(itemContent)
-                    } else {
-                        result.success(emptyMap<String, Any>())
-                    }
-                }.addOnFailureListener { result.error(it.message ?: "", it.localizedMessage, it) }
-    }
-
-    private fun receivedApplicationContexts(result: Result) {
-        dataClient.dataItems
-                .addOnSuccessListener { items ->
-                    val itemContents = items.filter {
-                        // Elements that are not from the local node
-                        it.uri.host != localNode.id && it.uri.path == "/$channelName"
-                    }.map { objectFromBytes(it.data) }
-                    result.success(itemContents)
-                }.addOnFailureListener { result.error(it.message ?: "", it.localizedMessage, it) }
-    }
 
     private fun sendMessage(call: MethodCall, result: Result) {
         val messageData = objectToBytes(call.arguments)
@@ -152,31 +116,8 @@ class WearConnectivityPlugin : FlutterPlugin, MethodCallHandler,
         }.addOnFailureListener { result.error(it.message ?: "", it.localizedMessage, it) }
     }
 
-    private fun updateApplicationContext(call: MethodCall, result: Result) {
-        val eventData = objectToBytes(call.arguments)
-        val dataItem = PutDataRequest.create("/$channelName")
-        dataItem.data = eventData
-        dataClient.putDataItem(dataItem)
-                .addOnSuccessListener { result.success(null) }
-                .addOnFailureListener { result.error(it.message ?: "", it.localizedMessage, it) }
-
-    }
-
     override fun onMessageReceived(message: MessageEvent) {
         val messageContent = objectFromBytes(message.data)
         channel.invokeMethod("didReceiveMessage", messageContent)
-    }
-
-    override fun onDataChanged(dataItems: DataEventBuffer) {
-        dataItems
-                .filter {
-                    it.type == TYPE_CHANGED
-                            && it.dataItem.uri.host != localNode.id
-                            && it.dataItem.uri.path == "/$channelName"
-                }
-                .forEach { item ->
-                    val eventContent = objectFromBytes(item.dataItem.data)
-                    channel.invokeMethod("didReceiveApplicationContext", eventContent)
-                }
     }
 }
