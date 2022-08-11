@@ -63,4 +63,20 @@ class WearConnectivity {
   Future<void> updateApplicationContext(Map<String, dynamic> context) {
     return channel.invokeMethod('updateApplicationContext', context);
   }
+
+  Future<Map<String, dynamic>> get applicationContext async {
+    final applicationContext =
+    await channel.invokeMapMethod<String, dynamic>('applicationContext');
+    return applicationContext ?? {};
+  }
+
+  /// A dictionary containing the last update data received
+  Future<List<Map<String, dynamic>>> get receivedApplicationContexts async {
+    final receivedApplicationContexts =
+    await channel.invokeListMethod('receivedApplicationContexts');
+    final transformedContexts = receivedApplicationContexts
+        ?.map((e) => Map<String, dynamic>.from(e))
+        .toList();
+    return transformedContexts ?? [];
+  }
 }

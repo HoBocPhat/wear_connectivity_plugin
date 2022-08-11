@@ -59,6 +59,9 @@ class WearConnectivityPlugin : FlutterPlugin, MethodCallHandler,
             "isPaired" -> isPaired(result)
             "isReachable" -> isReachable(result)
             "isAppWatchInstalled" -> isAppWatchInstalled(result)
+            "applicationContext" -> applicationContext(result)
+            "receivedApplicationContexts" -> receivedApplicationContexts(result)
+
             // Methods
             "sendMessage" -> sendMessage(call, result)
             "updateApplicationContext" -> updateApplicationContext(call, result)
@@ -144,5 +147,32 @@ class WearConnectivityPlugin : FlutterPlugin, MethodCallHandler,
                     val eventContent = objectFromBytes(item.dataItem.data)
                     channel.invokeMethod("didReceiveApplicationContext", eventContent)
                 }
+    }
+
+    private fun applicationContext(result: Result) {
+        dataClient.dataItems
+                .addOnSuccessListener { items ->
+                    val localNodeItem = items.firstOrNull {
+                        // Only elements from the local node (there should only be one)
+                        it.uri.host == localNode.id && it.uri.path == "/$channelName"
+                    }
+                    if (localNodeItem != null) {
+                        val itemContent = objectFromBytes(localNodeItem.data)
+                        result.success(itemContent)
+                    } else {
+                        result.success(emptyMap<String, Any>())
+                    }
+                }.addOnFailureListener { result.error(it.message ?: "", it.localizedMessage, it) }
+    }
+
+    private fun receivedApplicationContexts(result: Result) {
+        dataClient.dataItems
+                .addOnSuccessListener { items ->
+                    val itemContents = items.filter {
+                        // Elements that are not from the local node
+                        it.uri.host != localNode.id && it.uri.path == "/$channelName"
+                    }.map { objectFromBytes(it.data) }
+                    result.success(itemContents)
+                }.addOnFailureListener { result.error(it.message ?: "", it.localizedMessage, it) }
     }
 }
