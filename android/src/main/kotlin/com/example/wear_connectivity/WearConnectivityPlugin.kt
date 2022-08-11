@@ -132,4 +132,17 @@ class WearConnectivityPlugin : FlutterPlugin, MethodCallHandler,
                 .addOnFailureListener { result.error(it.message ?: "", it.localizedMessage, it) }
 
     }
+
+    override fun onDataChanged(dataItems: DataEventBuffer) {
+        dataItems
+                .filter {
+                    it.type == TYPE_CHANGED
+                            && it.dataItem.uri.host != localNode.id
+                            && it.dataItem.uri.path == "/$channelName"
+                }
+                .forEach { item ->
+                    val eventContent = objectFromBytes(item.dataItem.data)
+                    channel.invokeMethod("didReceiveApplicationContext", eventContent)
+                }
+    }
 }

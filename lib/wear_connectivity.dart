@@ -8,6 +8,9 @@ class WearConnectivity {
   final _messageStreamController =
   StreamController<dynamic>.broadcast();
 
+  final _contextStreamController =
+  StreamController<Map<String, dynamic>>.broadcast();
+
   Stream<dynamic> get messageStream =>
       _messageStreamController.stream;
 
@@ -19,6 +22,9 @@ class WearConnectivity {
     switch (call.method) {
       case 'didReceiveMessage':
         _messageStreamController.add(call.arguments);
+        break;
+      case 'didReceiveApplicationContext':
+        _contextStreamController.add(Map<String, dynamic>.from(call.arguments));
         break;
       default:
         throw UnimplementedError('${call.method} not implemented');
