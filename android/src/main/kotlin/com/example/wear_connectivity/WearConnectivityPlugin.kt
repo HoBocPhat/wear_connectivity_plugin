@@ -26,6 +26,7 @@ class WearConnectivityPlugin : FlutterPlugin, MethodCallHandler,
     private lateinit var packageManager: PackageManager
     private lateinit var nodeClient: NodeClient
     private lateinit var messageClient: MessageClient
+    private lateinit var localNode: Node
 
     override fun onAttachedToEngine(flutterPluginBinding: FlutterPlugin.FlutterPluginBinding) {
         channel = MethodChannel(flutterPluginBinding.binaryMessenger, channelName)
