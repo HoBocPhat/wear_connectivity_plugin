@@ -124,7 +124,7 @@ class WearConnectivityPlugin : FlutterPlugin, MethodCallHandler,
     }
 
     private fun updateApplicationContext(call: MethodCall, result: Result) {
-        val eventData = objectToBytes(call.arguments)
+        val eventData = call.arguments
         val dataItem = PutDataRequest.create("/$channelName")
         dataItem.data = eventData
         dataClient.putDataItem(dataItem)
