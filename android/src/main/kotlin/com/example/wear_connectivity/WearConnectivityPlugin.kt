@@ -19,9 +19,13 @@ import java.io.ObjectOutputStream
 
 /** WearConnectivityPlugin */
 class WearConnectivityPlugin : FlutterPlugin, MethodCallHandler,
-        MessageClient.OnMessageReceivedListener, DataClient.OnDataChangedListener {
+        MessageClient.OnMessageReceivedListener {
     private val channelName = "wear_connectivity"
 
+    /// The MethodChannel that will the communication between Flutter and native Android
+    ///
+    /// This local reference serves to register the plugin with the Flutter Engine and unregister it
+    /// when the Flutter Engine is detached from the Activity
     private lateinit var channel: MethodChannel
     private lateinit var packageManager: PackageManager
     private lateinit var nodeClient: NodeClient
@@ -89,6 +93,7 @@ class WearConnectivityPlugin : FlutterPlugin, MethodCallHandler,
         if(android.os.Build.VERSION.SDK_INT >= 23){
             result.success(true);
         }
+
     }
 
     private fun isReachable(result: Result) {
@@ -116,8 +121,10 @@ class WearConnectivityPlugin : FlutterPlugin, MethodCallHandler,
         }.addOnFailureListener { result.error(it.message ?: "", it.localizedMessage, it) }
     }
 
+
     override fun onMessageReceived(message: MessageEvent) {
         val messageContent = objectFromBytes(message.data)
         channel.invokeMethod("didReceiveMessage", messageContent)
     }
+
 }
