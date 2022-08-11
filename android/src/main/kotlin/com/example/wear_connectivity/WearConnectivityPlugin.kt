@@ -22,10 +22,6 @@ class WearConnectivityPlugin : FlutterPlugin, MethodCallHandler,
         MessageClient.OnMessageReceivedListener {
     private val channelName = "wear_connectivity"
 
-    /// The MethodChannel that will the communication between Flutter and native Android
-    ///
-    /// This local reference serves to register the plugin with the Flutter Engine and unregister it
-    /// when the Flutter Engine is detached from the Activity
     private lateinit var channel: MethodChannel
     private lateinit var packageManager: PackageManager
     private lateinit var nodeClient: NodeClient
@@ -40,10 +36,8 @@ class WearConnectivityPlugin : FlutterPlugin, MethodCallHandler,
         packageManager = context.packageManager
         nodeClient = Wearable.getNodeClient(context)
         messageClient = Wearable.getMessageClient(context)
-        dataClient = Wearable.getDataClient(context)
 
         messageClient.addListener(this)
-        dataClient.addListener(this)
 
         nodeClient.localNode.addOnSuccessListener { localNode = it }
     }
@@ -51,7 +45,6 @@ class WearConnectivityPlugin : FlutterPlugin, MethodCallHandler,
     override fun onDetachedFromEngine(binding: FlutterPlugin.FlutterPluginBinding) {
         channel.setMethodCallHandler(null)
         messageClient.removeListener(this)
-        dataClient.removeListener(this)
     }
 
     override fun onMethodCall(call: MethodCall, result: Result) {
@@ -93,7 +86,6 @@ class WearConnectivityPlugin : FlutterPlugin, MethodCallHandler,
         if(android.os.Build.VERSION.SDK_INT >= 23){
             result.success(true);
         }
-
     }
 
     private fun isReachable(result: Result) {
