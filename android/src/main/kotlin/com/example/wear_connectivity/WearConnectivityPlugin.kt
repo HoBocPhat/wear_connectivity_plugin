@@ -126,7 +126,7 @@ class WearConnectivityPlugin : FlutterPlugin, MethodCallHandler,
     private fun updateApplicationContext(call: MethodCall, result: Result) {
         val eventData = objectToBytes(call.arguments)
         val dataItem = PutDataRequest.create("/$channelName").setUrgent()
-        dataItem.setData(eventData)
+        dataItem.getData(eventData)
         dataClient.putDataItem(dataItem)
                 .addOnSuccessListener { result.success(null) }
                 .addOnFailureListener { result.error(it.message ?: "", it.localizedMessage, it) }
