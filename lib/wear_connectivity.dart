@@ -1,80 +1,122 @@
 import 'dart:async';
-
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-class WearConnectivity {
-  final MethodChannel channel = const MethodChannel("wear_connectivity");
+const methodSendMessage = "SEND_MESSAGE";
+const methodIsAvailable = "IS_AVAILABLE";
+const methodIsAppWatchInstalled = "IS_APP_WATCH_INSTALLED";
+const methodIsPaired = "IS_PAIRED";
+const methodIsReachable = "IS_REACHABLE";
+const methodIsSupport = "IS_SUPPORT";
+const methodReceivedApplicationContexts = "METHOD_RECEIVED_APPLICATION_CONTEXTS";
+const methodApplicationContext = "METHOD_APPLICATION_CONTEXT";
+const methodUpdateApplicationContext = "UPDATE_APPLICATION_CONTEXT";
 
+const didReceiveMessage = "DID_RECEIVE_MESSAGE";
+const didReceiveApplicationContext = "DID_RECEIVE_APPLICATION_CONTEXT";
+const didReceiveSessionDidBecomeInactive = "SESSION_DID_BECOME_INACTIVE";
+const didSessionDidDeActive = "SESSION_DID_DE_ACTIVE";
+
+class WatchAppConnectivity {
+
+  @protected
+  final MethodChannel methodChannel;
+
+  final _sessionDidBecomeActive =
+  StreamController<void>.broadcast();
+  final _sessionDidDeActive =
+  StreamController<void>.broadcast();
   final _messageStreamController =
-  StreamController<dynamic>.broadcast();
-
+  StreamController<Map<String, dynamic>>.broadcast();
   final _contextStreamController =
   StreamController<Map<String, dynamic>>.broadcast();
 
-  Stream<dynamic> get messageStream =>
+  /// Stream of did become active received
+  Stream<void> get sessionDidBecomeActive =>
+      _sessionDidBecomeActive.stream;
+  /// Stream of did de active received
+  Stream<void> get sessionDidDeActive =>
+      _sessionDidDeActive.stream;
+  /// Stream of messages received
+  Stream<Map<String, dynamic>> get messageStream =>
       _messageStreamController.stream;
 
-  Stream<dynamic> get contextStream =>
+  /// Stream of contexts received
+  Stream<Map<String, dynamic>> get contextStream =>
       _contextStreamController.stream;
 
-  WearConnectivity() {
-    channel.setMethodCallHandler(_handle);
+  WatchAppConnectivity({required String pluginName})
+      : methodChannel = MethodChannel(pluginName) {
+    methodChannel.setMethodCallHandler(_handle);
   }
 
   Future _handle(MethodCall call) async {
     switch (call.method) {
-      case 'didReceiveMessage':
-        _messageStreamController.add(call.arguments);
+      case didReceiveMessage:
+        _messageStreamController.add(Map<String, dynamic>.from(call.arguments));
         break;
-      case 'didReceiveApplicationContext':
-        _contextStreamController.add(call.arguments);
+      case didReceiveApplicationContext:
+        _contextStreamController.add(Map<String, dynamic>.from(call.arguments));
         break;
       default:
         throw UnimplementedError('${call.method} not implemented');
     }
   }
 
+  /// If watches are supported by the current platform
   Future<bool> get isSupported async {
-    final supported = await channel.invokeMethod<bool>('isSupported');
+    final supported = await methodChannel.invokeMethod<bool>(methodIsSupport);
     return supported ?? false;
   }
 
+  /// If a watch is paired
   Future<bool> get isPaired async {
-    final paired = await channel.invokeMethod<bool>('isPaired');
+    final paired = await methodChannel.invokeMethod<bool>(methodIsPaired);
     return paired ?? false;
   }
 
-  Future<bool> get isReachable async {
-    final reachable = await channel.invokeMethod<bool>('isReachable');
-    return reachable ?? false;
-  }
-
+  /// If an app watch is installed
   Future<bool> get isAppWatchInstalled async {
-    final isInstalled = await channel.invokeMethod<bool>('isAppWatchInstalled');
+    final isInstalled = await methodChannel.invokeMethod<bool>(methodIsAppWatchInstalled);
     return isInstalled ?? false;
   }
 
-
-  /// Send a message to all connected watches
-  Future<T?> sendMessage<T>(List<dynamic> args) {
-    return channel.invokeMethod('sendMessage', args);
+  /// If the companion app is reachable
+  Future<bool> get isReachable async {
+    final reachable = await methodChannel.invokeMethod<bool>(methodIsReachable);
+    return reachable ?? false;
   }
 
-  Future<T?> updateApplicationContext<T>(List<dynamic> context) {
-    return channel.invokeMethod('updateApplicationContext', context);
-  }
-
-  Future<List<dynamic>> get applicationContext async {
+  /// The most recently sent contextual data
+  Future<Map<String, dynamic>> get applicationContext async {
     final applicationContext =
-    await channel.invokeListMethod<dynamic>('applicationContext');
-    return applicationContext ?? [];
+    await methodChannel.invokeMapMethod<String, dynamic>(methodApplicationContext);
+    return applicationContext ?? {};
   }
 
   /// A dictionary containing the last update data received
-  Future<List<dynamic>> get receivedApplicationContexts async {
+  Future<List<Map<String, dynamic>>> get receivedApplicationContexts async {
     final receivedApplicationContexts =
-    await channel.invokeListMethod('receivedApplicationContexts');
-    final transformedContexts = receivedApplicationContexts?.toList();
+    await methodChannel.invokeListMethod(methodReceivedApplicationContexts);
+    final transformedContexts = receivedApplicationContexts
+        ?.map((e) => Map<String, dynamic>.from(e))
+        .toList();
     return transformedContexts ?? [];
   }
+
+  /// Send a message to all connected watches
+  Future<void> sendMessage(Map<String, dynamic> message) {
+    return _invokeSendMessage(message);
+  }
+
+  /// Update the application context
+  Future<void> updateApplicationContext(Map<String, dynamic> context) {
+    return methodChannel.invokeMethod(methodUpdateApplicationContext, context);
+  }
+
+  Future<T?> _invokeSendMessage<T>(Map<String, dynamic> args) async{
+    return await methodChannel.invokeMethod<T>(methodSendMessage,args);
+  }
+
+
 }
