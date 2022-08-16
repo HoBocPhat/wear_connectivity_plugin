@@ -20,7 +20,7 @@ import java.io.ObjectOutputStream
 /** WearConnectivityPlugin */
 class WearConnectivityPlugin : FlutterPlugin, MethodCallHandler,
         MessageClient.OnMessageReceivedListener, DataClient.OnDataChangedListener, ChannelClient{
-    private val channelName = "watch_connectivity_sdk"
+    private val channelName = "wear_connectivity"
 
     private lateinit var channel: MethodChannel
     private lateinit var packageManager: PackageManager
@@ -52,7 +52,7 @@ class WearConnectivityPlugin : FlutterPlugin, MethodCallHandler,
         messageClient.removeListener(this)
         dataClient.removeListener(this)
     }
-    
+
     override fun onMethodCall(call: MethodCall, result: Result) {
         when (call.method) {
             // Getters
