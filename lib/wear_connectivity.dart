@@ -20,7 +20,7 @@ const didSessionDidDeActive = "SESSION_DID_DE_ACTIVE";
 class WatchAppConnectivity {
 
   @protected
-  final MethodChannel methodChannel;
+  final MethodChannel methodChannel = const MethodChannel("wear_connectivity");
 
   final _sessionDidBecomeActive =
   StreamController<void>.broadcast();
@@ -45,8 +45,8 @@ class WatchAppConnectivity {
   Stream<Map<String, dynamic>> get contextStream =>
       _contextStreamController.stream;
 
-  WatchAppConnectivity({required String pluginName})
-      : methodChannel = MethodChannel(pluginName) {
+  WatchAppConnectivity()
+  {
     methodChannel.setMethodCallHandler(_handle);
   }
 
