@@ -19,7 +19,7 @@ import java.io.ObjectOutputStream
 
 /** WearConnectivityPlugin */
 class WearConnectivityPlugin : FlutterPlugin, MethodCallHandler,
-        MessageClient.OnMessageReceivedListener, DataClient.OnDataChangedListener, ChannelClient{
+        MessageClient.OnMessageReceivedListener, DataClient.OnDataChangedListener{
     private val channelName = "wear_connectivity"
 
     private lateinit var channel: MethodChannel
@@ -28,7 +28,6 @@ class WearConnectivityPlugin : FlutterPlugin, MethodCallHandler,
     private lateinit var messageClient: MessageClient
     private lateinit var localNode: Node
     private lateinit var dataClient: DataClient
-    private lateinit var channelClient: ChannelClient
 
     override fun onAttachedToEngine(flutterPluginBinding: FlutterPlugin.FlutterPluginBinding) {
         channel = MethodChannel(flutterPluginBinding.binaryMessenger, channelName)
