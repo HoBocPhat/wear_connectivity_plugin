@@ -55,16 +55,16 @@ class WearConnectivityPlugin : FlutterPlugin, MethodCallHandler,
     override fun onMethodCall(call: MethodCall, result: Result) {
         when (call.method) {
             // Getters
-            "isSupported" -> isSupported(result)
-            "isPaired" -> isPaired(result)
-            "isReachable" -> isReachable(result)
-            "isAppWatchInstalled" -> isAppWatchInstalled(result)
-            "applicationContext" -> applicationContext(result)
-            "receivedApplicationContexts" -> receivedApplicationContexts(result)
+            "IS_SUPPORT" -> isSupported(result)
+            "IS_PAIRED" -> isPaired(result)
+            "IS_REACHABLE" -> isReachable(result)
+            "IS_APP_WATCH_INSTALLED" -> isAppWatchInstalled(result)
+            "METHOD_APPLICATION_CONTEXT" -> applicationContext(result)
+            "METHOD_RECEIVED_APPLICATION_CONTEXTS" -> receivedApplicationContexts(result)
 
             // Methods
-            "sendMessage" -> sendMessage(call, result)
-            "updateApplicationContext" -> updateApplicationContext(call, result)
+            "SEND_MESSAGE" -> sendMessage(call, result)
+            "UPDATE_APPLICATION_CONTEXT" -> updateApplicationContext(call, result)
 
             // Not implemented
             else -> result.notImplemented()
