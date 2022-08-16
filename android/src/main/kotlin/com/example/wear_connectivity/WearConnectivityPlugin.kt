@@ -30,7 +30,7 @@ class WearConnectivityPlugin : FlutterPlugin, MethodCallHandler,
     private lateinit var dataClient: DataClient
 
     override fun onAttachedToEngine(flutterPluginBinding: FlutterPlugin.FlutterPluginBinding) {
-        channel = MethodChannel(flutterPluginBinding.binaryMessenger)
+        channel = MethodChannel(flutterPluginBinding.binaryMessenger, channelName)
         channel.setMethodCallHandler(this)
 
         val context = flutterPluginBinding.applicationContext
