@@ -17,7 +17,7 @@ class WearConnectivity {
   Stream<dynamic> get contextStream =>
       _contextStreamController.stream;
 
-  WatchAppConnectivity() {
+  WearConnectivity() {
     channel.setMethodCallHandler(_handle);
   }
 
